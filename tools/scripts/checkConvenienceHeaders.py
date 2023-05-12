@@ -28,14 +28,14 @@ def normalized_paths(paths):
     """Replaces \ with / in every path"""
     return [normalized_path(path) for path in paths]
 
-source_path = catchPath + '/src/catch2'
+source_path = f'{catchPath}/src/catch2'
 source_path = normalized_path(source_path)
 include_parser = re.compile(r'#include <(catch2/.+\.hpp)>')
 
 errors_found = False
 
 def headers_in_folder(folder):
-    return glob(folder + '/*.hpp')
+    return glob(f'{folder}/*.hpp')
 
 def folders_in_folder(folder):
     return [x for x in os.scandir(folder) if x.is_dir()]
@@ -46,7 +46,7 @@ def collated_includes(folder):
         if subfolder.name in internal_dirs:
             base.extend(headers_in_folder(subfolder.path))
         else:
-            base.append(subfolder.path + '/catch_{}_all.hpp'.format(subfolder.name))
+            base.append(f'{subfolder.path}/catch_{subfolder.name}_all.hpp')
     return normalized_paths(sorted(base))
 
 def includes_from_file(header):
@@ -55,8 +55,7 @@ def includes_from_file(header):
         for line in file:
             if not line.startswith('#include'):
                 continue
-            match = include_parser.match(line)
-            if match:
+            if match := include_parser.match(line):
                 includes.append(match.group(1))
     return normalized_paths(includes)
 
@@ -87,32 +86,34 @@ def verify_convenience_header(folder):
 
     path = normalized_path(folder.path)
 
-    assert path.startswith(source_path), '{} does not start with {}'.format(path, source_path)
+    assert path.startswith(
+        source_path
+    ), f'{path} does not start with {source_path}'
     stripped_path = path[len(source_path) + 1:]
     path_pieces = stripped_path.split('/')
 
     if path == source_path:
         header_name = 'catch_all.hpp'
     else:
-        header_name = 'catch_{}_all.hpp'.format('_'.join(path_pieces))
+        header_name = f"catch_{'_'.join(path_pieces)}_all.hpp"
 
     # 1) Does it exist?
-    full_path = path + '/' + header_name
+    full_path = f'{path}/{header_name}'
     if not os.path.isfile(full_path):
         errors_found = True
-        print('Missing convenience header: {}'.format(full_path))
+        print(f'Missing convenience header: {full_path}')
         return
-    file_incs = includes_from_file(path + '/' + header_name)
+    file_incs = includes_from_file(f'{path}/{header_name}')
     # 2) Are the includes are sorted?
     if sorted(file_incs) != file_incs:
         errors_found = True
-        print("'{}': Includes are not in sorted order!".format(header_name))
+        print(f"'{header_name}': Includes are not in sorted order!")
 
     # 3) Are there no duplicates?
     duplicated = get_duplicates(file_incs)
     for duplicate in duplicated:
         errors_found = True
-        print("'{}': Duplicated include: '{}'".format(header_name, duplicate))
+        print(f"'{header_name}': Duplicated include: '{duplicate}'")
 
     target_includes = normalize_includes(collated_includes(path))
     # Avoid requiring the convenience header to include itself
@@ -123,14 +124,14 @@ def verify_convenience_header(folder):
         if (include not in file_incs_set and
             include != 'catch2/internal/catch_windows_h_proxy.hpp'):
             errors_found = True
-            print("'{}': missing include '{}'".format(header_name, include))
+            print(f"'{header_name}': missing include '{include}'")
 
     # 5) Are there any superfluous headers?
     desired_set = set(target_includes)
     for include in file_incs:
         if include not in desired_set:
             errors_found = True
-            print("'{}': superfluous include '{}'".format(header_name, include))
+            print(f"'{header_name}': superfluous include '{include}'")
 
 
 
@@ -142,7 +143,7 @@ def walk_source_folders(current):
             walk_source_folders(folder)
 
 # This is an ugly hack because we cannot instantiate DirEntry manually
-base_dir = [x for x in os.scandir(catchPath + '/src') if x.name == 'catch2']
+base_dir = [x for x in os.scandir(f'{catchPath}/src') if x.name == 'catch2']
 walk_source_folders(base_dir[0])
 
 # Propagate error "code" upwards

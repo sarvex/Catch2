@@ -50,11 +50,11 @@ conan_basic_setup()'''.format(line_to_replace, self.install_folder.replace("\\",
         self.cpp_info.components["catch2base"].names["cmake_find_package"] = "Catch2"
         self.cpp_info.components["catch2base"].names["cmake_find_package_multi"] = "Catch2"
         self.cpp_info.components["catch2base"].names["pkg_config"] = "Catch2"
-        self.cpp_info.components["catch2base"].libs = ["Catch2" + lib_suffix]
+        self.cpp_info.components["catch2base"].libs = [f"Catch2{lib_suffix}"]
         self.cpp_info.components["catch2base"].builddirs.append("lib/cmake/Catch2")
         # Catch2WithMain
         self.cpp_info.components["catch2main"].names["cmake_find_package"] = "Catch2WithMain"
         self.cpp_info.components["catch2main"].names["cmake_find_package_multi"] = "Catch2WithMain"
         self.cpp_info.components["catch2main"].names["pkg_config"] = "Catch2WithMain"
-        self.cpp_info.components["catch2main"].libs = ["Catch2Main" + lib_suffix]
+        self.cpp_info.components["catch2main"].libs = [f"Catch2Main{lib_suffix}"]
         self.cpp_info.components["catch2main"].requires = ["catch2base"]

@@ -21,8 +21,8 @@ exists, and path to where the output files should be stored.
 """
 
 if len(sys.argv) != 3:
-    print('Wrong number of arguments: {}'.format(len(sys.argv)))
-    print('Usage: {} catch2-top-level-dir base-build-output-dir'.format(sys.argv[0]))
+    print(f'Wrong number of arguments: {len(sys.argv)}')
+    print(f'Usage: {sys.argv[0]} catch2-top-level-dir base-build-output-dir')
     exit(1)
 
 catch2_source_path = os.path.abspath(sys.argv[1])
@@ -42,7 +42,7 @@ stdout, _ = run_and_return_output(os.path.join(build_dir_path, 'tests'),
 
 
 summary_line = 'No tests ran'
-if not summary_line in stdout:
-    print("Could not find '{}' in the stdout".format(summary_line))
-    print('stdout: "{}"'.format(stdout))
+if summary_line not in stdout:
+    print(f"Could not find '{summary_line}' in the stdout")
+    print(f'stdout: "{stdout}"')
     exit(2)

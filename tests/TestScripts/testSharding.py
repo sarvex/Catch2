@@ -50,7 +50,7 @@ def list_tests(self_test_exe: str, extra_args: List[str] = None):
                              check = True,
                              universal_newlines = True)
     except subprocess.CalledProcessError as ex:
-        print('Could not list tests:\n{}'.format(ex.stderr))
+        print(f'Could not list tests:\n{ex.stderr}')
 
     if ret.stderr:
         raise RuntimeError("Unexpected error output:\n" + ret.stderr)
@@ -59,8 +59,7 @@ def list_tests(self_test_exe: str, extra_args: List[str] = None):
     result = [elem.text for elem in root.findall('./TestCase/Name')]
 
     if len(result) < 2:
-        raise RuntimeError("Unexpectedly few tests listed (got {})".format(
-            len(result)))
+        raise RuntimeError(f"Unexpectedly few tests listed (got {len(result)})")
 
 
     return result
@@ -79,7 +78,7 @@ def execute_tests(self_test_exe: str, extra_args: List[str] = None):
                              check = True,
                              universal_newlines = True)
     except subprocess.CalledProcessError as ex:
-        print('Could not list tests:\n{}'.format(ex.stderr))
+        print(f'Could not list tests:\n{ex.stderr}')
 
     if ret.stderr:
         raise RuntimeError("Unexpected error output:\n" + process.stderr)
@@ -88,8 +87,7 @@ def execute_tests(self_test_exe: str, extra_args: List[str] = None):
     result = [elem.attrib["name"] for elem in root.findall('./TestCase')]
 
     if len(result) < 2:
-        raise RuntimeError("Unexpectedly few tests listed (got {})".format(
-            len(result)))
+        raise RuntimeError(f"Unexpectedly few tests listed (got {len(result)})")
 
     return result
 
@@ -114,17 +112,27 @@ def test_sharded_listing(self_test_exe: str) -> Dict[int, List[str]]:
         )
     )
 
-    shard_listings = dict()
-    for shard_idx in range(number_of_shards):
-        shard_listings[shard_idx] = list_tests(self_test_exe, ['--shard-count', str(number_of_shards), '--shard-index', str(shard_idx)])
-
+    shard_listings = {
+        shard_idx: list_tests(
+            self_test_exe,
+            [
+                '--shard-count',
+                str(number_of_shards),
+                '--shard-index',
+                str(shard_idx),
+            ],
+        )
+        for shard_idx in range(number_of_shards)
+    }
     shard_sizes = [len(v) for v in shard_listings.values()]
     assert len(all_tests) == sum(shard_sizes)
 
     # Check that the shards have roughly the right sizes (e.g. we don't
     # have all tests in single shard and the others are empty)
     differences = [abs(x1 - x2) for x1, x2 in zip(shard_sizes, shard_sizes[1:])]
-    assert all(diff <= 1 for diff in differences), "A shard has weird size: {}".format(shard_sizes)
+    assert all(
+        diff <= 1 for diff in differences
+    ), f"A shard has weird size: {shard_sizes}"
 
     combined_shards = [inner for outer in shard_listings.values() for inner in outer]
     assert all_tests == combined_shards, (

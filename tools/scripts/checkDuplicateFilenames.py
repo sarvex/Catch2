@@ -10,5 +10,5 @@ for root, dir, files in os.walk("src/catch2"):
         if file not in files_set:
             files_set.add(file)
         else:
-            print("File %s is duplicate" % file)
+            print(f"File {file} is duplicate")
             sys.exit(1)

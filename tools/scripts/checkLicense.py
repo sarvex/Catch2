@@ -18,27 +18,20 @@ def check_licence_in_file(filename: str) -> bool:
         file_preamble = ''.join(f.readlines()[:7])
 
     if correct_licence != file_preamble:
-        print('File {} does not have proper licence'.format(filename))
+        print(f'File {filename} does not have proper licence')
         return False
     return True
 
 def check_licences_in_path(path: str) -> int:
-    failed = 0
-    files_to_check = glob.glob(path + '/**/*.cpp', recursive=True) \
-                   + glob.glob(path + '/**/*.hpp', recursive=True)
-    for file in files_to_check:
-        if not check_licence_in_file(file):
-            failed += 1
-    return failed
+    files_to_check = glob.glob(f'{path}/**/*.cpp', recursive=True) + glob.glob(
+        f'{path}/**/*.hpp', recursive=True
+    )
+    return sum(1 for file in files_to_check if not check_licence_in_file(file))
 
 def check_licences():
-    failed = 0
     roots = ['src/catch2', 'tests']
-    for root in roots:
-        failed += check_licences_in_path(root)
-    
-    if failed:
-        print('{} files are missing licence'.format(failed))
+    if failed := sum(check_licences_in_path(root) for root in roots):
+        print(f'{failed} files are missing licence')
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -13,40 +13,38 @@ import os
 import subprocess
 
 def configure_and_build(source_path: str, project_path: str, options: List[Tuple[str, str]]):
-    base_configure_cmd = ['cmake',
-                          '-B{}'.format(project_path),
-                          '-H{}'.format(source_path),
-                          '-DCMAKE_BUILD_TYPE=Debug',
-                          '-DCATCH_DEVELOPMENT_BUILD=ON']
-    for option, value in options:
-        base_configure_cmd.append('-D{}={}'.format(option, value))
+    base_configure_cmd = [
+        'cmake',
+        f'-B{project_path}',
+        f'-H{source_path}',
+        '-DCMAKE_BUILD_TYPE=Debug',
+        '-DCATCH_DEVELOPMENT_BUILD=ON',
+    ]
+    base_configure_cmd.extend(f'-D{option}={value}' for option, value in options)
     try:
         subprocess.run(base_configure_cmd,
                        stdout = subprocess.PIPE,
                        stderr = subprocess.STDOUT,
                        check = True)
     except subprocess.SubprocessError as ex:
-        print("Could not configure build to '{}' from '{}'".format(project_path, source_path))
-        print("Return code: {}".format(ex.returncode))
-        print("output: {}".format(ex.output))
+        print(f"Could not configure build to '{project_path}' from '{source_path}'")
+        print(f"Return code: {ex.returncode}")
+        print(f"output: {ex.output}")
         raise
-    print('Configuring {} finished'.format(project_path))
+    print(f'Configuring {project_path} finished')
 
-    build_cmd = ['cmake',
-                 '--build', '{}'.format(project_path),
-                 # For now we assume that we only need Debug config
-                 '--config', 'Debug']
+    build_cmd = ['cmake', '--build', f'{project_path}', '--config', 'Debug']
     try:
         subprocess.run(build_cmd,
                        stdout = subprocess.PIPE,
                        stderr = subprocess.STDOUT,
                        check = True)
     except subprocess.SubprocessError as ex:
-        print("Could not build project in '{}'".format(project_path))
-        print("Return code: {}".format(ex.returncode))
-        print("output: {}".format(ex.output))
+        print(f"Could not build project in '{project_path}'")
+        print(f"Return code: {ex.returncode}")
+        print(f"output: {ex.output}")
         raise
-    print('Building {} finished'.format(project_path))
+    print(f'Building {project_path} finished')
 
 def run_and_return_output(base_path: str, binary_name: str, other_options: List[str]) -> Tuple[str, str]:
     # For now we assume that Windows builds are done using MSBuild under
@@ -55,9 +53,7 @@ def run_and_return_output(base_path: str, binary_name: str, other_options: List[
     config_path = "Debug" if os.name == 'nt' else ""
     full_path = os.path.join(base_path, config_path, binary_name)
 
-    base_cmd = [full_path]
-    base_cmd.extend(other_options)
-
+    base_cmd = [full_path, *other_options]
     try:
         ret = subprocess.run(base_cmd,
                              stdout = subprocess.PIPE,
@@ -65,11 +61,11 @@ def run_and_return_output(base_path: str, binary_name: str, other_options: List[
                              check = True,
                              universal_newlines = True)
     except subprocess.SubprocessError as ex:
-        print('Could not run "{}"'.format(base_cmd))
-        print('Args: "{}"'.format(other_options))
-        print('Return code: {}'.format(ex.returncode))
-        print('stdout: {}'.format(ex.stdout))
-        print('stderr: {}'.format(ex.stdout))
+        print(f'Could not run "{base_cmd}"')
+        print(f'Args: "{other_options}"')
+        print(f'Return code: {ex.returncode}')
+        print(f'stdout: {ex.stdout}')
+        print(f'stderr: {ex.stdout}')
         raise
 
     return (ret.stdout, ret.stderr)

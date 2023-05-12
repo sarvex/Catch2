@@ -21,8 +21,8 @@ exists, and path to where the output files should be stored.
 """
 
 if len(sys.argv) != 3:
-    print('Wrong number of arguments: {}'.format(len(sys.argv)))
-    print('Usage: {} catch2-top-level-dir base-build-output-dir'.format(sys.argv[0]))
+    print(f'Wrong number of arguments: {len(sys.argv)}')
+    print(f'Usage: {sys.argv[0]} catch2-top-level-dir base-build-output-dir')
     exit(1)
 
 catch2_source_path = os.path.abspath(sys.argv[1])
@@ -38,7 +38,7 @@ stdout, _ = run_and_return_output(os.path.join(build_dir_path, 'tests'),
 
 
 required_output = 'Disabled by CATCH_CONFIG_DISABLE_STRINGIFICATION'
-if not required_output in stdout:
-    print("Could not find '{}' in the stdout".format(required_output))
-    print('stdout: "{}"'.format(stdout))
+if required_output not in stdout:
+    print(f"Could not find '{required_output}' in the stdout")
+    print(f'stdout: "{stdout}"')
     exit(2)

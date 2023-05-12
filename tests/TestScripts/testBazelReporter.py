@@ -21,14 +21,14 @@ Requires 2 arguments, path to Catch2 binary configured with
 `CATCH_CONFIG_BAZEL_SUPPORT`, and the output directory for the output file.
 """
 if len(sys.argv) != 3:
-    print("Wrong number of arguments: {}".format(len(sys.argv)))
-    print("Usage: {} test-bin-path output-dir".format(sys.argv[0]))
+    print(f"Wrong number of arguments: {len(sys.argv)}")
+    print(f"Usage: {sys.argv[0]} test-bin-path output-dir")
     exit(1)
 
 
 bin_path = os.path.abspath(sys.argv[1])
 output_dir = os.path.abspath(sys.argv[2])
-xml_out_path = os.path.join(output_dir, '{}.xml'.format(os.path.basename(bin_path)))
+xml_out_path = os.path.join(output_dir, f'{os.path.basename(bin_path)}.xml')
 
 # Ensure no file exists from previous test runs
 if os.path.isfile(xml_out_path):
@@ -57,32 +57,32 @@ except subprocess.SubprocessError as ex:
         test_passing = False
         stdout = ex.stdout
     else:
-        print('Could not run "{}"'.format(bin_path))
-        print("Return code: {}".format(ex.returncode))
-        print("stdout: {}".format(ex.stdout))
-        print("stderr: {}".format(ex.stderr))
+        print(f'Could not run "{bin_path}"')
+        print(f"Return code: {ex.returncode}")
+        print(f"stdout: {ex.stdout}")
+        print(f"stderr: {ex.stderr}")
         raise
 
 # Check for valid XML output
 try:
     tree = ET.parse(xml_out_path)
 except ET.ParseError as ex:
-    print("Invalid XML: '{}'".format(ex))
+    print(f"Invalid XML: '{ex}'")
     raise
 except FileNotFoundError as ex:
-    print("Could not find '{}'".format(xml_out_path))
+    print(f"Could not find '{xml_out_path}'")
     raise
 
 bin_name = os.path.basename(bin_path)
 # Check for matching testsuite
-if not tree.find('.//testsuite[@name="{}"]'.format(bin_name)):
-    print("Could not find '{}' testsuite".format(bin_name))
+if not tree.find(f'.//testsuite[@name="{bin_name}"]'):
+    print(f"Could not find '{bin_name}' testsuite")
     exit(2)
 
 # Check that we haven't disabled the default reporter
 summary_test_cases = re.findall(r'test cases: \d* \| \d* passed \| \d* failed', stdout)
 if len(summary_test_cases) == 0:
-    print("Could not find test summary in {}".format(stdout))
+    print(f"Could not find test summary in {stdout}")
     exit(2)
 
 total, passed, failed = [int(s) for s in summary_test_cases[0].split() if s.isdigit()]
@@ -100,5 +100,5 @@ if len(tree.findall('.//failure')) != failed:
     exit(2)
 
 if (passed + failed) != total:
-    print("Something has gone very wrong, ({} + {}) != {}".format(passed, failed, total))
+    print(f"Something has gone very wrong, ({passed} + {failed}) != {total}")
     exit(2)

@@ -66,12 +66,14 @@ def main():
     test_exe, = sys.argv[1:]
     actual_section_output = get_test_output(test_exe, sections = True)
 
-    assert actual_section_output == expected_section_output, (
-    'Sections\nActual:\n{}\nExpected:\n{}\n'.format(actual_section_output, expected_section_output))
+    assert (
+        actual_section_output == expected_section_output
+    ), f'Sections\nActual:\n{actual_section_output}\nExpected:\n{expected_section_output}\n'
 
     actual_generator_output = get_test_output(test_exe, sections = False)
-    assert actual_generator_output == expected_generator_output, (
-    'Generators\nActual:\n{}\nExpected:\n{}\n'.format(actual_generator_output, expected_generator_output))
+    assert (
+        actual_generator_output == expected_generator_output
+    ), f'Generators\nActual:\n{actual_generator_output}\nExpected:\n{expected_generator_output}\n'
 
 
 

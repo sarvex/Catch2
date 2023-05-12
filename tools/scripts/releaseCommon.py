@@ -15,17 +15,15 @@ mesonPath = os.path.join(catchPath, 'meson.build')
 
 class Version:
     def __init__(self):
-        f = open( versionPath, 'r' )
-        for line in f:
-            m = versionParser.match( line )
-            if m:
-                self.variableDecl = m.group(1)
-                self.majorVersion = int(m.group(2))
-                self.minorVersion = int(m.group(3))
-                self.patchNumber = int(m.group(4))
-                self.branchName = m.group(5)
-                self.buildNumber = int(m.group(6))
-        f.close()
+        with open( versionPath, 'r' ) as f:
+            for line in f:
+                if m := versionParser.match(line):
+                    self.variableDecl = m.group(1)
+                    self.majorVersion = int(m.group(2))
+                    self.minorVersion = int(m.group(3))
+                    self.patchNumber = int(m.group(4))
+                    self.branchName = m.group(5)
+                    self.buildNumber = int(m.group(6))
 
     def nonDevelopRelease(self):
         if self.branchName != "":
@@ -58,19 +56,18 @@ class Version:
     def getVersionString(self):
         versionString = '{0}.{1}.{2}'.format( self.majorVersion, self.minorVersion, self.patchNumber )
         if self.branchName != "":
-            versionString = versionString + '-{0}.{1}'.format( self.branchName, self.buildNumber )
+            versionString += '-{0}.{1}'.format( self.branchName, self.buildNumber )
         return versionString
 
     def updateVersionFile(self):
-        f = open( versionPath, 'r' )
-        lines = []
-        for line in f:
-            m = versionParser.match( line )
-            if m:
-                lines.append( '{0}( {1}, {2}, {3}, "{4}", {5} );'.format( self.variableDecl, self.majorVersion, self.minorVersion, self.patchNumber, self.branchName, self.buildNumber ) )
-            else:
-                lines.append( line.rstrip() )
-        f.close()
+        with open( versionPath, 'r' ) as f:
+            lines = []
+            for line in f:
+                m = versionParser.match( line )
+                if m:
+                    lines.append( '{0}( {1}, {2}, {3}, "{4}", {5} );'.format( self.variableDecl, self.majorVersion, self.minorVersion, self.patchNumber, self.branchName, self.buildNumber ) )
+                else:
+                    lines.append( line.rstrip() )
         f = open( versionPath, 'w' )
         for line in lines:
             f.write( line + "\n" )
@@ -98,10 +95,26 @@ def updateMesonFile(version):
 
 def updateVersionDefine(version):
     # First member of the tuple is the compiled regex object, the second is replacement if it matches
-    replacementRegexes = [(re.compile(b'#define CATCH_VERSION_MAJOR \\d+'),'#define CATCH_VERSION_MAJOR {}'.format(version.majorVersion).encode('ascii')),
-                          (re.compile(b'#define CATCH_VERSION_MINOR \\d+'),'#define CATCH_VERSION_MINOR {}'.format(version.minorVersion).encode('ascii')),
-                          (re.compile(b'#define CATCH_VERSION_PATCH \\d+'),'#define CATCH_VERSION_PATCH {}'.format(version.patchNumber).encode('ascii')),
-                         ]
+    replacementRegexes = [
+        (
+            re.compile(b'#define CATCH_VERSION_MAJOR \\d+'),
+            f'#define CATCH_VERSION_MAJOR {version.majorVersion}'.encode(
+                'ascii'
+            ),
+        ),
+        (
+            re.compile(b'#define CATCH_VERSION_MINOR \\d+'),
+            f'#define CATCH_VERSION_MINOR {version.minorVersion}'.encode(
+                'ascii'
+            ),
+        ),
+        (
+            re.compile(b'#define CATCH_VERSION_PATCH \\d+'),
+            f'#define CATCH_VERSION_PATCH {version.patchNumber}'.encode(
+                'ascii'
+            ),
+        ),
+    ]
     with open(definePath, 'rb') as file:
         lines = file.readlines()
     with open(definePath, 'wb') as file:
@@ -115,7 +128,9 @@ def updateVersionPlaceholder(filename, version):
     with open(filename, 'rb') as file:
         lines = file.readlines()
     placeholderRegex = re.compile(b'in Catch[0-9]? X.Y.Z')
-    replacement = 'in Catch2 {}.{}.{}'.format(version.majorVersion, version.minorVersion, version.patchNumber).encode('ascii')
+    replacement = f'in Catch2 {version.majorVersion}.{version.minorVersion}.{version.patchNumber}'.encode(
+        'ascii'
+    )
     with open(filename, 'wb') as file:
         for line in lines:
             file.write(placeholderRegex.sub(replacement, line))
@@ -126,7 +141,7 @@ def updateDocumentationVersionPlaceholders(version):
     docsPath = os.path.join(catchPath, 'docs/')
     for basePath, _, files in os.walk(docsPath):
         for file in files:
-            if fnmatch.fnmatch(file, "*.md") and "contributing.md" != file:
+            if fnmatch.fnmatch(file, "*.md") and file != "contributing.md":
                 updateVersionPlaceholder(os.path.join(basePath, file), version)
 
 

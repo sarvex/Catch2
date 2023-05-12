@@ -47,15 +47,7 @@ def readLines(in_file):
 def removeLines(lines, remove=('[[back to top]', '<a class="mk-toclify"')):
     """Removes existing [back to top] links and <a id> tags."""
 
-    if not remove:
-        return lines[:]
-
-    out = []
-    for l in lines:
-        if l.startswith(remove):
-            continue
-        out.append(l)
-    return out
+    return [l for l in lines if not l.startswith(remove)] if remove else lines[:]
 
 def removeToC(lines):
     """Removes existing table of contents starting at index contentLineNdx."""
@@ -162,10 +154,9 @@ def tagAndCollect(lines, id_tag=True, back_links=False, exclude_h=None):
             saw_headline = True
             dashified = dashifyHeadline(l)
 
-            if not exclude_h or not dashified[-1] in exclude_h:
+            if not exclude_h or dashified[-1] not in exclude_h:
                 if id_tag:
-                    id_tag = '<a class="mk-toclify" id="%s"></a>'\
-                              % (dashified[1])
+                    id_tag = f'<a class="mk-toclify" id="{dashified[1]}"></a>'
                     out_contents.append(id_tag)
                 headlines.append(dashified)
 
@@ -178,11 +169,7 @@ def positioningHeadlines(headlines):
     """
     Strips unnecessary whitespaces/tabs if first header is not left-aligned
     """
-    left_just = False
-    for row in headlines:
-        if row[-1] == 1:
-            left_just = True
-            break
+    left_just = any(row[-1] == 1 for row in headlines)
     if not left_just:
         for row in headlines:
             row[-1] -= 1
@@ -211,14 +198,14 @@ def createToc(headlines, hyperlink=True, top_link=False, no_toc_header=False):
     if not no_toc_header:
         if top_link:
             processed.append('<a class="mk-toclify" id="table-of-contents"></a>\n')
-        processed.append(contentTitle + '<br>')
+        processed.append(f'{contentTitle}<br>')
 
     for line in headlines:
         if hyperlink:
-            item = '[%s](#%s)' % (line[0], line[1])
+            item = f'[{line[0]}](#{line[1]})'
         else:
-            item = '%s- %s' % ((line[2]-1)*'    ', line[0])
-        processed.append(item + '<br>')
+            item = f"{(line[2] - 1) * '    '}- {line[0]}"
+        processed.append(f'{item}<br>')
     processed.append('\n')
     return processed
 
@@ -248,13 +235,11 @@ def buildMarkdown(toc_headlines, body, spacer=0, placeholder=None):
 
     if placeholder:
         body_markdown = "\n".join(body)
-        markdown = body_markdown.replace(placeholder, toc_markdown)
+        return body_markdown.replace(placeholder, toc_markdown)
     else:
         body_markdown_p1 = "\n".join(body[:contentLineNdx ]) + '\n'
         body_markdown_p2 = "\n".join(body[ contentLineNdx:])
-        markdown = body_markdown_p1 + toc_markdown + body_markdown_p2
-
-    return markdown
+        return body_markdown_p1 + toc_markdown + body_markdown_p2
 
 def outputMarkdown(markdown_cont, output_file):
     """
@@ -360,10 +345,10 @@ def excludeHeadingsFor(f):
 
 def updateSingleDocumentToC(input_file, min_toc_len, verbose=False):
     """Add or update table of contents in specified file. Return 1 if file changed, 0 otherwise."""
-    if verbose :
-        print( 'file: {}'.format(input_file))
+    if verbose:
+        print(f'file: {input_file}')
 
-    output_file = input_file + '.tmp'
+    output_file = f'{input_file}.tmp'
 
     markdownToclify(
         input_file=input_file,
@@ -437,7 +422,7 @@ def updateDocumentToCMain():
     changedFiles = updateDocumentToC(paths=paths, min_toc_len=args.minTocEntries, verbose=args.verbose)
 
     if changedFiles > 0:
-        print( "Processed table of contents in " + str(changedFiles) + " file(s)" )
+        print(f"Processed table of contents in {str(changedFiles)} file(s)")
     else:
         print( "No table of contents added or updated" )
 

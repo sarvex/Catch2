@@ -21,14 +21,16 @@ Requires 2 arguments, path to Catch2 binary to run and the output directory
 for the output file.
 """
 if len(sys.argv) != 3:
-    print("Wrong number of arguments: {}".format(len(sys.argv)))
-    print("Usage: {} test-bin-path output-dir".format(sys.argv[0]))
+    print(f"Wrong number of arguments: {len(sys.argv)}")
+    print(f"Usage: {sys.argv[0]} test-bin-path output-dir")
     exit(1)
 
 
 bin_path = os.path.abspath(sys.argv[1])
 output_dir = os.path.abspath(sys.argv[2])
-info_file_path = os.path.join(output_dir, '{}.shard-support'.format(os.path.basename(bin_path)))
+info_file_path = os.path.join(
+    output_dir, f'{os.path.basename(bin_path)}.shard-support'
+)
 
 # Ensure no file exists from previous test runs
 if os.path.isfile(info_file_path):
@@ -58,18 +60,18 @@ try:
     )
     stdout = ret.stdout
 except subprocess.SubprocessError as ex:
-    print('Could not run "{}"'.format(bin_path))
-    print("Return code: {}".format(ex.returncode))
-    print("stdout: {}".format(ex.stdout))
-    print("stderr: {}".format(ex.stderr))
+    print(f'Could not run "{bin_path}"')
+    print(f"Return code: {ex.returncode}")
+    print(f"stdout: {ex.stdout}")
+    print(f"stderr: {ex.stderr}")
     raise
 
 
-if not "All tests passed (1 assertion in 1 test case)" in stdout:
+if "All tests passed (1 assertion in 1 test case)" not in stdout:
     print("Did not find expected output in stdout.")
-    print("stdout:\n{}".format(stdout))
+    print(f"stdout:\n{stdout}")
     exit(1)
 
 if not os.path.isfile(info_file_path):
-    print("Catch2 did not create expected file at path '{}'".format(info_file_path))
+    print(f"Catch2 did not create expected file at path '{info_file_path}'")
     exit(2)
